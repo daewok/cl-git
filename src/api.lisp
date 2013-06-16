@@ -131,16 +131,15 @@ where the repository isn't bare then it will be the location of the
 (defgeneric repository-workdir (object)
   (:documentation "Return the path to the root of the repository."))
 
-(defgeneric git-add (path &key &allow-other-keys)
+(defgeneric index-add-file (path index)
   (:documentation
-   "Adds the PATH to the current index *GIT-REPOSITORY-INDEX* or the
-explicit keyword argument :INDEX"))
+   "Adds the PATH to the index."))
 
 (defgeneric index-clear (object)
   (:documentation
    "Clears the content of the index."))
 
-(defgeneric git-write (object)
+(defgeneric index-write (object)
   (:documentation
    "Writes the OBJECT to its store.
 "))
@@ -205,7 +204,7 @@ start defaults to 0."))
 git config to a specific level.  Possible levels are :HIGHEST-LEVEL
 :SYSTEM :XDG :GLOBAL or :LOCAL"))
 
-(defgeneric index (object)
+(defgeneric open-index (object)
   (:documentation "Returns an index object for OBJECT (a repository)"))
 
 (defgeneric git-next (walker)
