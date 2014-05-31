@@ -20,9 +20,39 @@
 
 (in-package #:cl-git)
 
+;; General sizes.
 (include "stddef.h")
-(include "git2/clone.h")
+(include "git2/errors.h")
+
 (ctype size-t "size_t")
+
+;; Errors
+
+(cenum git-error-code
+	   ((:git-passthrough "GIT_PASSTHROUGH"))
+	   ((:git-ok "GIT_OK")))
+
+;; credentials
+
+(include "git2/transport.h")
+
+(cenum git-credtype-t
+		((:git-credtype-ssh-key "GIT_CREDTYPE_SSH_KEY")))
+
+(cstruct %git-cred "git_cred"
+		 (credtype "credtype" :type git-credtype-t)
+		 (free "free" :type :pointer))
+
+(cstruct %git-cred-ssh-key "git_cred_ssh_key"
+		 (parent "parent" :type (:struct %git-cred))
+		 (username "username" :type :string)
+		 (publickey "publickey" :type :string)
+		 (privatekey "privatekey" :type :string)
+		 (passphrase "passphrase" :type :string))
+
+;; Option structures and constants.
+
+(include "git2/clone.h") ; clone.h pulls in all of these
 
 (constant (+git-clone-options-version+ "GIT_CLONE_OPTIONS_VERSION")
 		  :type integer
@@ -42,19 +72,16 @@ remote callbacks structure.")
 (cenum git-checkout-strategy
 	   ((:git-checkout-safe-create "GIT_CHECKOUT_SAFE_CREATE")))
 
-(cstruct git-strarray "git_strarray"
-		 (strings "strings" :type :pointer)
-		 (count "count" :type size-t))
-
-(cstruct git-checkout-opts "git_checkout_opts"
+(cstruct %git-checkout-opts "git_checkout_opts"
 		 (version "version" :type :uint)
 		 (checkout-strategy "checkout_strategy" :type git-checkout-strategy))
 
-(cstruct git-remote-callbacks "git_remote_callbacks"
-		 (version "version" :type :uint))
-
-(cstruct git-clone-options "git_clone_options"
+(cstruct %git-remote-callbacks "git_remote_callbacks"
 		 (version "version" :type :uint)
-		 (checkout-options "checkout_opts" :type (:struct git-checkout-opts))
-		 (remote-callbacks "remote_callbacks" :type (:struct git-remote-callbacks)))
+		 (credentials "credentials" :type :pointer))
+
+(cstruct %git-clone-options "git_clone_options"
+		 (version "version" :type :uint)
+		 (checkout-options "checkout_opts" :type (:struct %git-checkout-opts))
+		 (remote-callbacks "remote_callbacks" :type (:struct %git-remote-callbacks)))
 

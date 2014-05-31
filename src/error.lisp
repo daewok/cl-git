@@ -30,6 +30,7 @@
   (defvar error-conditions (make-hash-table)))
 
 (defcenum %error-class-list
+  :none
   :no-memory
   :os
   :invalid
@@ -51,7 +52,9 @@
   :stash
   :checkout
   :fetchhead
-  :merge)
+  :merge
+  :ssh
+  :filter)
 
 
 (defcstruct git-error

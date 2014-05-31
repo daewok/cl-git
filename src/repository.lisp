@@ -39,7 +39,7 @@ contains the object database.")
   (repository :pointer)
   (url :string)
   (local-path :string)
-  (options :pointer))
+  (options git-clone-options))
 
 (defcfun ("git_repository_open" %git-repository-open)
     %return-value
@@ -106,7 +106,7 @@ contains the object database.")
 
 (defmethod init-repository ((path string) &key bare)
   (with-foreign-object (repository-ref :pointer)
-    (%git-repository-init repository-ref path bare)
+	(%git-repository-init repository-ref path bare)
     (make-instance 'repository
            :pointer (mem-ref repository-ref :pointer)
            :free-function #'git-repository-free)))
@@ -117,7 +117,8 @@ contains the object database.")
 
 (defmethod clone-repository ((url string) (path string))
   (with-foreign-object (repository-ref :pointer)
-	(%git-clone repository-ref url path (null-pointer))
+	(format t "status: ~a~%"
+			(%git-clone repository-ref url path (make-instance 'git-clone-options)))
 	(make-instance 'repository
 				   :pointer (mem-ref repository-ref :pointer)
 				   :free-function #'git-repository-free)))
