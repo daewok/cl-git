@@ -58,7 +58,8 @@
                 #:callback
                 #:foreign-free
                 #:pointer-address
-                #:defcenum)
+                #:defcenum
+				#:foreign-slot-value)
   (:import-from #:local-time
                 #:unix-to-timestamp
                 #:timestamp-to-universal)

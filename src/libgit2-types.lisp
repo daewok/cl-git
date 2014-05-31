@@ -21,5 +21,40 @@
 (in-package #:cl-git)
 
 (include "stddef.h")
-
+(include "git2/clone.h")
 (ctype size-t "size_t")
+
+(constant (+git-clone-options-version+ "GIT_CLONE_OPTIONS_VERSION")
+		  :type integer
+		  :documentation "The constant representing the version of the
+options structure.")
+
+(constant (+git-checkout-opts-version+ "GIT_CHECKOUT_OPTS_VERSION")
+		  :type integer
+		  :documentation "The constant representing the version of the
+options structure.")
+
+(constant (+git-remote-callbacks-version+ "GIT_REMOTE_CALLBACKS_VERSION")
+		  :type integer
+		  :documentation "The constant representing the version of the
+remote callbacks structure.")
+
+(cenum git-checkout-strategy
+	   ((:git-checkout-safe-create "GIT_CHECKOUT_SAFE_CREATE")))
+
+(cstruct git-strarray "git_strarray"
+		 (strings "strings" :type :pointer)
+		 (count "count" :type size-t))
+
+(cstruct git-checkout-opts "git_checkout_opts"
+		 (version "version" :type :uint)
+		 (checkout-strategy "checkout_strategy" :type git-checkout-strategy))
+
+(cstruct git-remote-callbacks "git_remote_callbacks"
+		 (version "version" :type :uint))
+
+(cstruct git-clone-options "git_clone_options"
+		 (version "version" :type :uint)
+		 (checkout-options "checkout_opts" :type (:struct git-checkout-opts))
+		 (remote-callbacks "remote_callbacks" :type (:struct git-remote-callbacks)))
+

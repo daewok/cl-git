@@ -34,6 +34,13 @@ contains the object database.")
   (path :string)
   (bare :boolean))
 
+(defcfun ("git_clone" %git-clone)
+	:int
+  (repository :pointer)
+  (url :string)
+  (local-path :string)
+  (options :pointer))
+
 (defcfun ("git_repository_open" %git-repository-open)
     %return-value
   (repository :pointer)
@@ -107,6 +114,13 @@ contains the object database.")
 (defmethod init-repository ((path pathname) &key bare)
   "Open an existing repository located at PATH."
   (init-repository (namestring path) :bare bare))
+
+(defmethod clone-repository ((url string) (path string))
+  (with-foreign-object (repository-ref :pointer)
+	(%git-clone repository-ref url path (null-pointer))
+	(make-instance 'repository
+				   :pointer (mem-ref repository-ref :pointer)
+				   :free-function #'git-repository-free)))
 
 (defmethod open-repository ((path string))
   (with-foreign-object (repository-ref :pointer)
