@@ -20,27 +20,7 @@
 
 (in-package #:cl-git)
 
-(defbitfield (git-checkout-strategy)
-  :safe
-  :safe-create
-  :force
-  :allow-conflicts
-  :remove-untracked
-  :remove-ignored
-  :update-only
-  :dont-update-index
-  :no-refresh
-  :skip-unmerged
-  :use-ours
-  :use-theirs
-  :disable-pathspec-match
-  (:skip-locked-directories 262144)
-  :dont-overwrite-ignored
-  :conflict-style-merge
-  :conflict-style-diff3)
-
-(defcstruct (git-checkout-options)
+(defcstruct (git-clone-options)
   (version :uint)
-  (checkout-strategy git-checkout-strategy)
   
 )

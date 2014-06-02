@@ -19,6 +19,15 @@
 
 (in-package #:cl-git)
 
+(defmacro defcfun-with-bindings (bindings name-and-options return-type &body args)
+  (destructuring-bind (c-name lisp-name &rest options) name-and-options
+	(let ((defun-args (mapcar #'first args)))
+	  (with-unique-names (lisp-name-of-ff)
+		`(progn
+		   (defcfun (,c-name ,lisp-name-of-ff ,@options) ,return-type ,@args)
+		   (defun ,lisp-name ,defun-args
+			 (let ,bindings
+			   (,lisp-name-of-ff ,@defun-args))))))))
 
 (defcstruct (git-strings :class strings-struct-type)
   (strings :pointer)

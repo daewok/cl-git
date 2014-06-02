@@ -20,13 +20,11 @@
 
 (in-package #:cl-git)
 
-
 (define-foreign-type repository (git-pointer)
   ()
   (:documentation "Repository is the root type, it
 contains the object database.")
   (:simple-parser %repository))
-
 
 (defcfun ("git_repository_init" %git-repository-init)
     :int
@@ -34,12 +32,13 @@ contains the object database.")
   (path :string)
   (bare :boolean))
 
-(defcfun ("git_clone" %git-clone)
-	:int
+(defcfun-with-bindings ((*available-credentials* nil))
+	("git_clone" %git-clone)
+    :int
   (repository :pointer)
   (url :string)
   (local-path :string)
-  (options git-clone-options))
+  (options :pointer))
 
 (defcfun ("git_repository_open" %git-repository-open)
     %return-value
@@ -118,7 +117,7 @@ contains the object database.")
 (defmethod clone-repository ((url string) (path string))
   (with-foreign-object (repository-ref :pointer)
 	(format t "status: ~a~%"
-			(%git-clone repository-ref url path (make-instance 'git-clone-options)))
+			(%git-clone repository-ref url path (null-pointer)))
 	(make-instance 'repository
 				   :pointer (mem-ref repository-ref :pointer)
 				   :free-function #'git-repository-free)))

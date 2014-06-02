@@ -20,29 +20,83 @@
 
 (in-package #:cl-git)
 
-(defclass git-cred ()
-  ((username
-	:initarg :username
-	:documentation "If provided, this username is used instead of
-using the username inferred from the repository URL.")))
+(defvar *available-credentials* nil)
 
-(defcallback %acquire-credentials-no-credentials git-error-code
+(defbitfield git-credtype-t
+  (:userpass-plaintext)
+  (:ssh-key)
+  (:ssh-custom)
+  (:default)
+  (:ssh-interactive))
+
+(defcallback %acquire-credentials git-error-code
 	((git-cred :pointer)
 	 (url :string)
 	 (username-from-url :string)
 	 (allowed-types :uint)
 	 (payload :pointer))
-  (declare (ignore git-cred url username-from-url allowed-types payload))
-  :git-passthrough)
+  (let ((allowed-types (foreign-bitfield-symbols 'git-credtype-t allowed-types)))
+	(dolist (cred *available-credentials* :git-passthrough)
+	  (when (cred-allowed-p cred allowed-types)
+		(return (acquire-credentials git-cred cred url username-from-url payload))))))
 
-(defclass no-credentials (git-cred)
+(defgeneric acquire-credentials (git-cred cred url username-from-url payload))
+
+(defcfun ("git_cred_ssh_key_new" %git-cred-ssh-key-new) git-error-code
+  (git-cred :pointer)
+  (username :string)
+  (public-key-file :string)
+  (private-key-file :string)
+  (passphrase :string))
+
+(defmethod acquire-credentials (git-cred (cred ssh-key-from-file) url username-from-url payload)
+  (%git-cred-ssh-key-new git-cred
+						 (or (git-cred-username cred)
+							 username-from-url)
+						 (cond
+						   ((stringp (ssh-key-public-key-path cred))
+							(ssh-key-public-key-path cred))
+						   ((pathnamep (ssh-key-public-key-path cred))
+							(namestring (ssh-key-public-key-path cred)))
+						   (:default
+							(null-pointer)))
+						 (namestring (ssh-key-private-key-path cred))
+						 (or (ssh-key-passphrase cred)
+							 (null-pointer))))
+
+(defgeneric cred-allowed-p (git-cred allowed-types)
+  (:documentation "Returns T iff the credential instance is allowed by
+the list of symbols in ALLOWED-TYPES."))
+
+(defclass git-cred ()
+  ((username
+	:initarg :username
+	:initform nil
+	:reader git-cred-username)))
+
+(defclass ssh-key (git-cred)
   ())
 
-;; Static functions can't be called by cffi, so we have to provide our
-;; own function to free the ssh key.
-(defcallback %ssh-key-free :void
-	((struct :pointer))
-  struct)
+(defmethod cred-allowed-p ((git-cred ssh-key) allowed-types)
+  (member :ssh-key allowed-types))
+
+(defclass ssh-key-from-file (ssh-key)
+  ((private-key-path
+	:initarg :private-key-path
+	:initform (error "You must provide a path to the private key.")
+	:reader ssh-key-private-key-path
+	:documentation "path to the private key file.")
+   (public-key-path
+	:initarg :public-key-path
+	:initform nil
+	:reader ssh-key-public-key-path
+	:documentation "path to the public key file. Required if the
+public key is not the same as the private key with \".pub\"
+appended.")
+   (passphrase
+	:initarg :passphrase
+	:initform nil
+	:reader ssh-key-passphrase)))
 
 (defcallback %acquire-credentials-ssh-key-from-agent git-error-code
 	((git-cred :pointer)
@@ -61,7 +115,6 @@ using the username inferred from the repository URL.")))
 						  publickey)
 						 ptr (:struct %git-cred-ssh-key))
 	  (setf (foreign-slot-value parent '(:struct %git-cred) 'credtype) :git-credtype-ssh-key)
-	  (setf (foreign-slot-value parent '(:struct %git-cred) 'free) (callback %ssh-key-free))
 	  (setf username (foreign-string-alloc username-from-url))
 	  (setf privatekey (foreign-string-alloc "/home/etimmons/.ssh/id_rsa_no_passphrase"))
 	  ;;(setf publickey (foreign-string-alloc "/home/etimmons/.ssh/id_rsa_no_passphrase.puasdfb"))
@@ -73,15 +126,4 @@ using the username inferred from the repository URL.")))
   ;;(break)
 ;;  (format t "url: ~a~%username-from-url: ~a~%" url username-from-url)
   :git-ok)
-
-(defclass ssh-key-from-file (git-cred)
-  ((private-key-path
-	:initarg :private-key-path
-	:documentation "path to the private key file.")
-   (public-key-path
-	:initarg :public-key-path
-	:initform nil
-	:documentation "path to the public key file. Required if the
-public key is not the same as the private key with \".pub\"
-appended.")))
 

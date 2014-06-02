@@ -34,7 +34,6 @@
   (dst :string)
   (flags refspec-flags))
 
-
 (define-foreign-type remote (git-object)
   nil
   (:simple-parser %remote))
@@ -84,6 +83,51 @@
           :remote-oid oid
           :local-oid loid
           :name name)))
+
+(defcstruct (git-remote-callbacks :class remote-callbacks-struct-type)
+  (version :uint)
+  (sideband-progress :pointer)
+  (completion :pointer)
+  (credentials :pointer)
+  (transfer-progress :pointer)
+  (update-tips :pointer)
+  (payload :pointer))
+
+(define-foreign-type remote-callbacks ()
+  ((version
+	:initform +git-remote-callbacks-version+
+	:reader remote-callbacks-version)
+   (credentials
+	:initarg :credentials
+	:reader remote-callbacks-credentials))
+  (:simple-parser remote-callbacks)
+  (:actual-type :pointer))
+
+(defmethod translate-to-foreign (value (type remote-callbacks))
+  (let ((ptr (foreign-alloc '(:struct git-remote-callbacks))))
+	(translate-into-foreign-memory value type ptr)))
+
+(defmethod translate-into-foreign-memory ((value remote-callbacks) (type remote-callbacks) ptr)
+  "For correct behavior, a new binding for *available-credentials*
+should be made around the call to any foreign function where VALUE is used."
+  (with-foreign-slots ((version sideband-progress completion credentials transfer-progress
+								update-tips payload)
+					   ptr (:struct git-remote-callbacks))
+
+	(setf version (remote-callbacks-version value))
+	(if (remote-callbacks-credentials value)
+		;; We've been given some credentials to potentially use. We
+		;; need to call the acquire-credentials callback.
+		(setf *available-credentials* (remote-callbacks-credentials value)
+			  credentials (callback %acquire-credentials))
+		;; No credentials given.
+		(setf credentials (null-pointer)))
+	(setf sideband-progress (null-pointer))
+	(setf completion (null-pointer))
+	(setf transfer-progress (null-pointer))
+	(setf update-tips (null-pointer))
+	(setf payload (null-pointer)))
+  ptr)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -14,7 +14,8 @@
   (:import-from #:cl-fad
                 #:pathname-relative-p)
   (:import-from #:alexandria
-                #:ensure-list)
+                #:ensure-list
+				#:with-unique-names)
   (:import-from #:closer-mop
                 #:subclassp)
   (:import-from #:flexi-streams
@@ -59,7 +60,8 @@
                 #:foreign-free
                 #:pointer-address
                 #:defcenum
-				#:foreign-slot-value)
+				#:foreign-slot-value
+				#:foreign-bitfield-symbols)
   (:import-from #:local-time
                 #:unix-to-timestamp
                 #:timestamp-to-universal)

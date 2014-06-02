@@ -36,9 +36,6 @@
 
 (include "git2/transport.h")
 
-(cenum git-credtype-t
-		((:git-credtype-ssh-key "GIT_CREDTYPE_SSH_KEY")))
-
 (cstruct %git-cred "git_cred"
 		 (credtype "credtype" :type git-credtype-t)
 		 (free "free" :type :pointer))
@@ -69,8 +66,11 @@ options structure.")
 		  :documentation "The constant representing the version of the
 remote callbacks structure.")
 
-(cenum git-checkout-strategy
-	   ((:git-checkout-safe-create "GIT_CHECKOUT_SAFE_CREATE")))
+;; (cenum git-checkout-strategy
+;; 	   ((:git-checkout-safe-create "GIT_CHECKOUT_SAFE_CREATE")))
+
+;; (bitfield git-checkout-strategy-t
+;; 		  ((:safe "git_checkout_strategy_t.GIT_CHECKOUT_SAFE_CREATE")))
 
 (cstruct %git-checkout-opts "git_checkout_opts"
 		 (version "version" :type :uint)
