@@ -32,20 +32,20 @@
 	   ((:git-passthrough "GIT_PASSTHROUGH"))
 	   ((:git-ok "GIT_OK")))
 
-;; credentials
+;; ;; credentials
 
-(include "git2/transport.h")
+;; (include "git2/transport.h")
 
-(cstruct %git-cred "git_cred"
-		 (credtype "credtype" :type git-credtype-t)
-		 (free "free" :type :pointer))
+;; (cstruct %git-cred "git_cred"
+;; 		 (credtype "credtype" :type git-credtype-t)
+;; 		 (free "free" :type :pointer))
 
-(cstruct %git-cred-ssh-key "git_cred_ssh_key"
-		 (parent "parent" :type (:struct %git-cred))
-		 (username "username" :type :string)
-		 (publickey "publickey" :type :string)
-		 (privatekey "privatekey" :type :string)
-		 (passphrase "passphrase" :type :string))
+;; (cstruct %git-cred-ssh-key "git_cred_ssh_key"
+;; 		 (parent "parent" :type (:struct %git-cred))
+;; 		 (username "username" :type :string)
+;; 		 (publickey "publickey" :type :string)
+;; 		 (privatekey "privatekey" :type :string)
+;; 		 (passphrase "passphrase" :type :string))
 
 ;; Option structures and constants.
 
@@ -66,22 +66,22 @@ options structure.")
 		  :documentation "The constant representing the version of the
 remote callbacks structure.")
 
-;; (cenum git-checkout-strategy
-;; 	   ((:git-checkout-safe-create "GIT_CHECKOUT_SAFE_CREATE")))
+(cenum git-checkout-strategy
+ 	   ((:git-checkout-safe-create "GIT_CHECKOUT_SAFE_CREATE")))
 
 ;; (bitfield git-checkout-strategy-t
 ;; 		  ((:safe "git_checkout_strategy_t.GIT_CHECKOUT_SAFE_CREATE")))
 
-(cstruct %git-checkout-opts "git_checkout_opts"
-		 (version "version" :type :uint)
-		 (checkout-strategy "checkout_strategy" :type git-checkout-strategy))
+;; (cstruct %git-checkout-opts "git_checkout_opts"
+;; 		 (version "version" :type :uint)
+;; 		 (checkout-strategy "checkout_strategy" :type git-checkout-strategy))
 
-(cstruct %git-remote-callbacks "git_remote_callbacks"
-		 (version "version" :type :uint)
-		 (credentials "credentials" :type :pointer))
+;; (cstruct %git-remote-callbacks "git_remote_callbacks"
+;; 		 (version "version" :type :uint)
+;; 		 (credentials "credentials" :type :pointer))
 
-(cstruct %git-clone-options "git_clone_options"
-		 (version "version" :type :uint)
-		 (checkout-options "checkout_opts" :type (:struct %git-checkout-opts))
-		 (remote-callbacks "remote_callbacks" :type (:struct %git-remote-callbacks)))
+;; (cstruct %git-clone-options "git_clone_options"
+;; 		 (version "version" :type :uint)
+;; 		 (checkout-options "checkout_opts" :type (:struct %git-checkout-opts))
+;; 		 (remote-callbacks "remote_callbacks" :type (:struct %git-remote-callbacks)))
 

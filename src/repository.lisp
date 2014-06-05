@@ -32,7 +32,8 @@ contains the object database.")
   (path :string)
   (bare :boolean))
 
-(defcfun-with-bindings ((*available-credentials* nil))
+(defcfun-with-bindings
+	((*available-credentials* nil))
 	("git_clone" %git-clone)
     :int
   (repository :pointer)
