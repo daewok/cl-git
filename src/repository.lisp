@@ -32,14 +32,21 @@ contains the object database.")
   (path :string)
   (bare :boolean))
 
-(defcfun-with-bindings
-	((*available-credentials* nil))
-	("git_clone" %git-clone)
+(defcfun ("git_clone" %git-clone)
     :int
   (repository :pointer)
   (url :string)
   (local-path :string)
   (options :pointer))
+
+;; (defcfun-with-bindings
+;; 	((*available-credentials* nil))
+;; 	("git_clone" %git-clone)
+;;     :int
+;;   (repository :pointer)
+;;   (url :string)
+;;   (local-path :string)
+;;   (options :pointer))
 
 (defcfun ("git_repository_open" %git-repository-open)
     %return-value
@@ -115,10 +122,13 @@ contains the object database.")
   "Open an existing repository located at PATH."
   (init-repository (namestring path) :bare bare))
 
-(defmethod clone-repository ((url string) (path string))
+(defmethod clone-repository ((url string) (path string) &key credentials)
+  "Clone an existing repository from URL to PATH."
   (with-foreign-object (repository-ref :pointer)
-	(format t "status: ~a~%"
-			(%git-clone repository-ref url path (null-pointer)))
+	;; Let the callback know
+	(let ((*available-credentials* (ensure-list credentials)))
+	  (format t "status: ~a~%"
+			  (%git-clone repository-ref url path (null-pointer))))
 	(make-instance 'repository
 				   :pointer (mem-ref repository-ref :pointer)
 				   :free-function #'git-repository-free)))

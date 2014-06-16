@@ -32,9 +32,16 @@
 	   ((:git-passthrough "GIT_PASSTHROUGH"))
 	   ((:git-ok "GIT_OK")))
 
-;; ;; credentials
+;; credentials
 
-;; (include "git2/transport.h")
+(include "git2/transport.h")
+
+;; the following is a work around for how libgit defines bitfields (in
+;; enums as opposed to preprocessor macros).
+;; (cenum (%%git-credtype :define-constants t)
+;; 	   ((:userpass-plaintext "GIT_CREDTYPE_USERPASS_PLAINTEXT"))
+;; 	   ((:ssh-key "GIT_CREDTYPE_SSH_KEY"))
+;; 	   )
 
 ;; (cstruct %git-cred "git_cred"
 ;; 		 (credtype "credtype" :type git-credtype-t)

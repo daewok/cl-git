@@ -33,7 +33,7 @@
 	((git-cred :pointer)
 	 (url :string)
 	 (username-from-url :string)
-	 (allowed-types :uint)
+	 (allowed-types git-credtype-t)
 	 (payload :pointer))
   (let ((allowed-types (foreign-bitfield-symbols 'git-credtype-t allowed-types)))
 	(dolist (cred *available-credentials* :git-passthrough)
@@ -49,20 +49,10 @@
   (private-key-file :string)
   (passphrase :string))
 
-(defmethod acquire-credentials (git-cred (cred ssh-key-from-file) url username-from-url payload)
-  (%git-cred-ssh-key-new git-cred
-						 (or (git-cred-username cred)
-							 username-from-url)
-						 (cond
-						   ((stringp (ssh-key-public-key-path cred))
-							(ssh-key-public-key-path cred))
-						   ((pathnamep (ssh-key-public-key-path cred))
-							(namestring (ssh-key-public-key-path cred)))
-						   (:default
-							(null-pointer)))
-						 (namestring (ssh-key-private-key-path cred))
-						 (or (ssh-key-passphrase cred)
-							 (null-pointer))))
+
+(defcfun ("git_cred_ssh_key_from_agent" %git-cred-ssh-key-from-agent) git-error-code
+  (git-cred :pointer)
+  (username :string))
 
 (defgeneric cred-allowed-p (git-cred allowed-types)
   (:documentation "Returns T iff the credential instance is allowed by
@@ -98,32 +88,47 @@ appended.")
 	:initform nil
 	:reader ssh-key-passphrase)))
 
-(defcallback %acquire-credentials-ssh-key-from-agent git-error-code
-	((git-cred :pointer)
-	 (url :string)
-	 (username-from-url :string)
-	 (allowed-types :uint)
-	 (payload :pointer))
-  ;;(declare (ignorable git-cred url username-from-url allowed-types payload))
-  (let ((ptr (foreign-alloc '(:struct %git-cred-ssh-key))))
-	;; init all to zero
-	(dotimes (i size-of-%git-cred-ssh-key)
-	  (setf (mem-ref ptr :char i) 0))
-	(with-foreign-slots (((:pointer parent)
-						  username
-						  privatekey
-						  publickey)
-						 ptr (:struct %git-cred-ssh-key))
-	  (setf (foreign-slot-value parent '(:struct %git-cred) 'credtype) :git-credtype-ssh-key)
-	  (setf username (foreign-string-alloc username-from-url))
-	  (setf privatekey (foreign-string-alloc "/home/etimmons/.ssh/id_rsa_no_passphrase"))
-	  ;;(setf publickey (foreign-string-alloc "/home/etimmons/.ssh/id_rsa_no_passphrase.puasdfb"))
-	  )
-	(break)
-	(setf (mem-ref git-cred :pointer) ptr)
+(defmethod acquire-credentials (git-cred (cred ssh-key-from-file) url username-from-url payload)
+  (%git-cred-ssh-key-new git-cred
+						 (or (git-cred-username cred)
+							 username-from-url)
+						 (cond
+						   ((stringp (ssh-key-public-key-path cred))
+							(ssh-key-public-key-path cred))
+						   ((pathnamep (ssh-key-public-key-path cred))
+							(namestring (ssh-key-public-key-path cred)))
+						   (:default
+							(null-pointer)))
+						 (namestring (ssh-key-private-key-path cred))
+						 (or (ssh-key-passphrase cred)
+							 (null-pointer))))
 
-)
-  ;;(break)
-;;  (format t "url: ~a~%username-from-url: ~a~%" url username-from-url)
-  :git-ok)
+;; (defcallback %acquire-credentials-ssh-key-from-agent git-error-code
+;; 	((git-cred :pointer)
+;; 	 (url :string)
+;; 	 (username-from-url :string)
+;; 	 (allowed-types :uint)
+;; 	 (payload :pointer))
+;;   ;;(declare (ignorable git-cred url username-from-url allowed-types payload))
+;;   (let ((ptr (foreign-alloc '(:struct %git-cred-ssh-key))))
+;; 	;; init all to zero
+;; 	(dotimes (i size-of-%git-cred-ssh-key)
+;; 	  (setf (mem-ref ptr :char i) 0))
+;; 	(with-foreign-slots (((:pointer parent)
+;; 						  username
+;; 						  privatekey
+;; 						  publickey)
+;; 						 ptr (:struct %git-cred-ssh-key))
+;; 	  (setf (foreign-slot-value parent '(:struct %git-cred) 'credtype) :git-credtype-ssh-key)
+;; 	  (setf username (foreign-string-alloc username-from-url))
+;; 	  (setf privatekey (foreign-string-alloc "/home/etimmons/.ssh/id_rsa_no_passphrase"))
+;; 	  ;;(setf publickey (foreign-string-alloc "/home/etimmons/.ssh/id_rsa_no_passphrase.puasdfb"))
+;; 	  )
+;; 	(break)
+;; 	(setf (mem-ref git-cred :pointer) ptr)
+
+;; )
+;;   ;;(break)
+;; ;;  (format t "url: ~a~%username-from-url: ~a~%" url username-from-url)
+;;   :git-ok)
 

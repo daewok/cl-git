@@ -26,7 +26,8 @@
 
 (defbitfield git-capabilities
   (:threads 1)
-  (:https 2))
+  (:https 2)
+  (:ssh 4))
 
 (define-foreign-library libgit2
   (:linux "libgit2.so.0")
