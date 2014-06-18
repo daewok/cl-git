@@ -46,6 +46,12 @@ available for interacting with remotes.")
   ;; This is a pointer so we can pass null to it.
   (passphrase :pointer))
 
+(defcfun %git-cred-userpass-plaintext-new
+    :int
+  (git-cred :pointer)
+  (username :string)
+  (password :string))
+
 (defcallback git-cred-acquire-cb
     :int
     ((git-cred :pointer)
@@ -106,3 +112,22 @@ available for interacting with remotes.")
                          (if (passphrase credentials)
                              (passphrase credentials)
                              (null-pointer))))
+
+(defclass username-password (credentials)
+  ((username
+    :initform nil
+    :initarg :username
+    :accessor username)
+   (password
+    :initform (error "A password must be provided.")
+    :initarg :password
+    :accessor password)))
+
+
+(defmethod acquire-credentials ((credentials username-password) git-cred url username-from-url allowed-types payload)
+  (declare (ignore payload url allowed-types))
+  (%git-cred-userpass-plaintext-new git-cred
+                                    (or (username credentials)
+                                        username-from-url)
+                                    (password credentials)))
+
