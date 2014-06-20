@@ -90,7 +90,7 @@ available for interacting with remotes.")
     :initarg :public-key
     :accessor public-key)
    (private-key
-    :initform (namestring (merge-pathnames ".ssh/id_rsa_tmp" (user-homedir-pathname)))
+    :initform (namestring (merge-pathnames ".ssh/id_rsa" (user-homedir-pathname)))
     :initarg :private-key
     :accessor private-key)
    (passphrase

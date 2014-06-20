@@ -89,6 +89,9 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defmethod clone-repository ((url string) (path pathname) &key credentials)
+  (clone-repository url (namestring path) :credentials credentials))
+
 (defmethod clone-repository ((url string) (path string) &key credentials)
   "Clone a repository from URL to PATH. CREDENTIALS "
   (with-foreign-object (repository-ref :pointer)
