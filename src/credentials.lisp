@@ -73,9 +73,9 @@ available for interacting with remotes.")
   ;; Tries the default values for an ssh key: private key at
   ;; ~/.ssh/id_rsa, public key at ~/.ssh/id_rsa.pub, no passphrase.
   (%git-cred-ssh-key-new git-cred username-from-url
-                         (null-pointer)
-                         (namestring (merge-pathnames ".ssh/id_rsa" (user-homedir-pathname)))
-                         (null-pointer)))
+						 (null-pointer)
+						 (namestring (merge-pathnames ".ssh/id_rsa" (user-homedir-pathname)))
+						 (null-pointer)))
 
 (defmethod acquire-credentials (credential-type git-cred url username-from-url allowed-types payload)
   (declare (ignore payload url allowed-types credential-type username-from-url git-cred))
@@ -104,14 +104,16 @@ available for interacting with remotes.")
   (declare (ignore payload url allowed-types))
   ;; Tries the default values for an ssh key: private key at
   ;; ~/.ssh/id_rsa, public key at ~/.ssh/id_rsa.pub, no passphrase.
-  (%git-cred-ssh-key-new git-cred username-from-url
-                         (if (public-key credentials)
-                             (public-key credentials)
-                             (null-pointer))
-                         (private-key credentials)
-                         (if (passphrase credentials)
-                             (passphrase credentials)
-                             (null-pointer))))
+  (with-foreign-string (pubkey (or (public-key credentials) ""))
+	(with-foreign-string (pass (or (passphrase credentials)))
+	  (%git-cred-ssh-key-new git-cred username-from-url
+							 (if (public-key credentials)
+								 pubkey
+								 (null-pointer))
+							 (private-key credentials)
+							 (if (passphrase credentials)
+								 pass
+								 (null-pointer))))))
 
 (defclass username-password (credentials)
   ((username
