@@ -21,8 +21,8 @@
 
 (in-package #:cl-git)
 
-(defvar *available-credentials* nil "A list of the credentials
-available for interacting with remotes.")
+(defvar *available-credentials* nil "The credentials available for
+interacting with remotes.")
 
 (defbitfield git-credtype
   (:userpass-plaintext)
@@ -59,14 +59,33 @@ available for interacting with remotes.")
      (username-from-url :string)
      (allowed-types git-credtype)
      (payload :pointer))
+  "This is the callback we give to libgit. It dispatches on
+*available-credentials* to provide a pointer to credentials allocated
+in foreign memory."
   ;; If no credentials have been provided, return a positive integer.
   (if *available-credentials*
       (acquire-credentials *available-credentials* git-cred url username-from-url allowed-types payload)
       1))
 
+(defgeneric acquire-credentials (credential-type git-cred url username-from-url allowed-types payload)
+  (:documentation "Specializes on CREDENTIAL-TYPE to fill GIT-CRED
+with a pointer to an object allocated in foreign memory that libgit
+can use as credentials."))
+
+;; Default implementation that does nothing.
+(defmethod acquire-credentials (credential-type git-cred url username-from-url allowed-types payload)
+  (declare (ignore payload url allowed-types credential-type username-from-url git-cred))
+  2)
+
+;;;; SSH Key from SSH Agent.
 (defmethod acquire-credentials ((credential-type (eql 'ssh-key-from-agent)) git-cred url username-from-url allowed-types payload)
   (declare (ignore payload url allowed-types))
   (%git-cred-ssh-key-from-agent git-cred username-from-url))
+
+
+;;; SSH Keys from file.
+(defclass credentials ()
+  ())
 
 (defmethod acquire-credentials ((credential-type (eql 'ssh-key)) git-cred url username-from-url allowed-types payload)
   (declare (ignore payload url allowed-types))
@@ -76,13 +95,6 @@ available for interacting with remotes.")
 						 (null-pointer)
 						 (namestring (merge-pathnames ".ssh/id_rsa" (user-homedir-pathname)))
 						 (null-pointer)))
-
-(defmethod acquire-credentials (credential-type git-cred url username-from-url allowed-types payload)
-  (declare (ignore payload url allowed-types credential-type username-from-url git-cred))
-  2)
-
-(defclass credentials ()
-  ())
 
 (defclass ssh-key (credentials)
   ((public-key
@@ -105,7 +117,7 @@ available for interacting with remotes.")
   ;; Tries the default values for an ssh key: private key at
   ;; ~/.ssh/id_rsa, public key at ~/.ssh/id_rsa.pub, no passphrase.
   (with-foreign-string (pubkey (or (public-key credentials) ""))
-	(with-foreign-string (pass (or (passphrase credentials)))
+	(with-foreign-string (pass (or (passphrase credentials) ""))
 	  (%git-cred-ssh-key-new git-cred username-from-url
 							 (if (public-key credentials)
 								 pubkey
@@ -114,6 +126,8 @@ available for interacting with remotes.")
 							 (if (passphrase credentials)
 								 pass
 								 (null-pointer))))))
+
+;;; Username/password
 
 (defclass username-password (credentials)
   ((username
